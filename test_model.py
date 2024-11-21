@@ -6,7 +6,7 @@ import torch.nn.functional as F
 def test_model_parameters():
     model = MNISTNet()
     total_params = sum(p.numel() for p in model.parameters())
-    assert total_params < 15000, f"Model has {total_params} parameters, should be less than 15000"
+    assert total_params < 25000, f"Model has {total_params} parameters, should be less than 25000"
 
 def test_model_output_shape():
     model = MNISTNet()

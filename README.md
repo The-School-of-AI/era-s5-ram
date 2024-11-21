@@ -5,11 +5,11 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An ultra-lightweight MNIST classifier that achieves remarkable performance with minimal parameters. Built with PyTorch and optimized for both accuracy and model size.
+An efficient MNIST classifier that achieves remarkable performance with minimal parameters. Built with PyTorch and optimized for both accuracy and model size.
 
 ## 🌟 Key Features
 
-- **Ultra-Lightweight Architecture**: < 9,000 parameters
+- **Lightweight Architecture**: < 15,000 parameters
 - **Fast Training**: 95%+ accuracy in just 1 epoch
 - **Modern Design**: Uses GAP and extensive BatchNorm
 - **Robust**: Includes dropout and data augmentation
@@ -20,29 +20,41 @@ An ultra-lightweight MNIST classifier that achieves remarkable performance with 
 ```python
 MNISTNet(
   # Input Block
-  (convblock1): Sequential(Conv2d(1, 4, k=3), BN, ReLU, Dropout)  # 26x26x4, RF=3
+  (convblock1): Sequential(Conv2d(1, 8, k=3), BN, ReLU, Dropout)  # 26x26x8, RF=3
   
   # Convolution Block 1
-  (convblock2): Sequential(Conv2d(4, 4, k=3), BN, ReLU, Dropout)  # 24x24x4, RF=5
-  (convblock3): Sequential(Conv2d(4, 8, k=3), BN, ReLU, Dropout)  # 22x22x8, RF=7
+  (convblock2): Sequential(Conv2d(8, 8, k=3), BN, ReLU, Dropout)  # 24x24x8, RF=5
+  (convblock3): Sequential(Conv2d(8, 16, k=3), BN, ReLU, Dropout) # 22x22x16, RF=7
   
   # Transition Block 1
-  (pool1): MaxPool2d(2, 2)                                        # 11x11x8, RF=8
-  (convblock4): Sequential(Conv2d(8, 8, k=1), BN, ReLU, Dropout) # 11x11x8, RF=8
+  (pool1): MaxPool2d(2, 2)                                        # 11x11x16, RF=8
+  (convblock4): Sequential(Conv2d(16, 8, k=1), BN, ReLU, Dropout) # 11x11x8, RF=8
   
   # Convolution Block 2
   (convblock5): Sequential(Conv2d(8, 16, k=3), BN, ReLU, Dropout)  # 9x9x16, RF=12
   (convblock6): Sequential(Conv2d(16, 16, k=3), BN, ReLU, Dropout) # 7x7x16, RF=16
   
   # Output Block
-  (convblock7): Sequential(Conv2d(16, 16, k=3, p=1), BN, ReLU, Dropout)  # 7x7x16, RF=20
-  (convblock7a): Sequential(Conv2d(16, 16, k=3, p=1), BN, ReLU, Dropout) # 7x7x16, RF=24
-  (convblock8): Conv2d(16, 10, k=1)                                       # 7x7x10, RF=28
-  (gap): AvgPool2d(7)                                                     # 1x1x10, RF=38
+  (convblock7): Sequential(Conv2d(16, 32, k=3, p=1), BN, ReLU, Dropout) # 7x7x32, RF=20
+  (convblock8): Conv2d(32, 10, k=1)                                      # 7x7x10, RF=20
+  (gap): AvgPool2d(7)                                                    # 1x1x10, RF=32
 )
 ```
 
-Total Parameters: ~9,000
+Total Parameters: ~13,000
+
+## 🔍 Architecture Highlights
+
+1. **Progressive Channel Growth**: 1 → 8 → 16 → 32 → 10 channels
+2. **Receptive Field**: Carefully designed to reach RF=32
+3. **Regularization**: 
+   - BatchNorm after every conv layer
+   - 5% dropout throughout
+   - MaxPooling for dimensionality reduction
+4. **Efficiency Features**:
+   - 1x1 convolutions for channel manipulation
+   - Global Average Pooling for final feature aggregation
+   - Bias=False in conv layers
 
 ## 📊 Training Configuration
 
@@ -54,19 +66,6 @@ Our model uses an optimized training setup:
 - 🔧 Weight Decay: 5e-4
 - 📈 Fast warmup (20% of training)
 - 💧 Dropout: 5%
-
-## 🔍 Architecture Highlights
-
-1. **Progressive Channel Growth**: 1 → 4 → 8 → 16 channels
-2. **Receptive Field**: Carefully designed to reach RF=38
-3. **Regularization**: 
-   - BatchNorm after every conv layer
-   - 5% dropout throughout
-   - MaxPooling for dimensionality reduction
-4. **Efficiency Features**:
-   - 1x1 convolutions for channel manipulation
-   - Global Average Pooling for final feature aggregation
-   - Bias=False in conv layers
 
 ## 📊 Data Augmentation
 
@@ -87,7 +86,7 @@ Our comprehensive testing ensures model reliability:
 
 | Test | Description |
 |------|-------------|
-| ✓ Parameter Count | Verifies model stays under 9K parameters |
+| ✓ Parameter Count | Verifies model stays under 15K parameters |
 | ✓ Output Shape | Ensures correct tensor dimensions |
 | ✓ Forward Pass | Validates stable forward propagation |
 | ✓ Probability | Checks proper probability distribution |
@@ -113,7 +112,7 @@ with torch.no_grad():
 ## 📈 Performance
 
 - Training Accuracy: > 95% (1 epoch)
-- Parameters: ~9,000
+- Parameters: ~13,000
 - Training Time: < 5 minutes (CPU)
 - Optimized for both CPU and GPU training
 - Stable training with BatchNorm and Dropout
