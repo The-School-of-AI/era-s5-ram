@@ -28,9 +28,13 @@ jobs:
         pip install pytest torch torchvision matplotlib numpy
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     
-    - name: Run tests and generate images
+    - name: Train model and verify accuracy
       run: |
         python -c "from train import train_model; train_model()"
+      continue-on-error: false
+    
+    - name: Run tests
+      run: |
         pytest test_model.py -v
     
     - name: Upload augmented images

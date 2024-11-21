@@ -59,6 +59,10 @@ def train_model():
     optimizer = torch.optim.Adam(model.parameters())
     
     model.train()
+    correct = 0
+    total = 0
+    
+    # Train for exactly one epoch
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
@@ -67,7 +71,20 @@ def train_model():
         loss.backward()
         optimizer.step()
         
+        # Calculate accuracy
+        pred = output.argmax(dim=1, keepdim=True)
+        correct += pred.eq(target.view_as(pred)).sum().item()
+        total += target.size(0)
+        
         if batch_idx % 100 == 0:
-            print(f'Loss: {loss.item():.6f}')
+            accuracy = 100. * correct / total
+            print(f'Loss: {loss.item():.6f}, Accuracy: {accuracy:.2f}%')
+    
+    # Final accuracy
+    accuracy = 100. * correct / total
+    print(f'Final Training Accuracy: {accuracy:.2f}%')
+    
+    if accuracy < 95.0:
+        raise ValueError(f"Model accuracy ({accuracy:.2f}%) is below the required 95%")
     
     return model 
