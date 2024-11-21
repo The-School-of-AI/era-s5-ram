@@ -8,21 +8,21 @@ class MNISTNet(nn.Module):
         super(MNISTNet, self).__init__()
         # Input Block
         self.convblock1 = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=(3, 3), padding=0, bias=False),
-            nn.BatchNorm2d(16),
+            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Dropout(dropout_value)
         ) # output_size = 26, RF = 3
 
         # CONVOLUTION BLOCK 1
         self.convblock2 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=16, kernel_size=(3, 3), padding=0, bias=False),
-            nn.BatchNorm2d(16),
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Dropout(dropout_value)
         ) # output_size = 24, RF = 5
         self.convblock3 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Dropout(dropout_value)
@@ -45,15 +45,15 @@ class MNISTNet(nn.Module):
             nn.Dropout(dropout_value)
         ) # output_size = 9, RF = 12
         self.convblock6 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, bias=False),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Dropout(dropout_value)
         ) # output_size = 7, RF = 16
 
         # OUTPUT BLOCK
         self.convblock7 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=1, bias=False),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Dropout(dropout_value)
