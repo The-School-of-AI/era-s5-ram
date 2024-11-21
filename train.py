@@ -54,16 +54,18 @@ def train_model():
     # Save augmented samples before training
     save_augmented_samples(dataset)
     
-    train_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
     
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, 
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.2, 
                                                   epochs=1, 
-                                                  steps_per_epoch=len(train_loader))
+                                                  steps_per_epoch=len(train_loader),
+                                                  pct_start=0.2)
     
     model.train()
     correct = 0
     total = 0
+    running_loss = 0.0
     
     # Train for exactly one epoch
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -79,10 +81,12 @@ def train_model():
         pred = output.argmax(dim=1, keepdim=True)
         correct += pred.eq(target.view_as(pred)).sum().item()
         total += target.size(0)
+        running_loss += loss.item()
         
         if batch_idx % 100 == 0:
             accuracy = 100. * correct / total
-            print(f'Batch [{batch_idx}/{len(train_loader)}] Loss: {loss.item():.6f}, Accuracy: {accuracy:.2f}%')
+            avg_loss = running_loss / (batch_idx + 1)
+            print(f'Batch [{batch_idx}/{len(train_loader)}] Loss: {avg_loss:.6f}, Accuracy: {accuracy:.2f}%')
     
     # Final accuracy
     accuracy = 100. * correct / total

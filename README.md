@@ -9,9 +9,9 @@ A highly efficient MNIST classifier that achieves remarkable performance with mi
 
 ## 🌟 Key Features
 
-- **Lightweight Architecture**: < 15,000 parameters
+- **Lightweight Architecture**: < 25,000 parameters
 - **Fast Training**: 95%+ accuracy in just 1 epoch
-- **Modern Design**: Uses Global Average Pooling
+- **Modern Design**: Uses Global Average Pooling and Batch Normalization
 - **Robust**: Includes data augmentation
 - **Well-Tested**: Comprehensive test suite with CI/CD
 
@@ -19,22 +19,26 @@ A highly efficient MNIST classifier that achieves remarkable performance with mi
 
 ```python
 MNISTNet(
-  (conv1): Conv2d(1, 8, kernel_size=3, padding=1)    # 28x28x8
-  (conv2): Conv2d(8, 16, kernel_size=3, padding=1)   # 28x28x16
-  (conv3): Conv2d(16, 10, kernel_size=3, padding=1)  # 28x28x10
-  (gap): AdaptiveAvgPool2d(1)                        # Global Average Pooling
+  (conv1): Conv2d(1, 16, kernel_size=3, padding=1)    # 28x28x16
+  (bn1): BatchNorm2d(16)
+  (conv2): Conv2d(16, 32, kernel_size=3, padding=1)   # 28x28x32
+  (bn2): BatchNorm2d(32)
+  (conv3): Conv2d(32, 10, kernel_size=3, padding=1)   # 28x28x10
+  (gap): AdaptiveAvgPool2d(1)                         # Global Average Pooling
 )
 ```
 
-Total Parameters: ~14,000
+Total Parameters: ~20,000
 
 ## 📊 Training Configuration
 
 Our model uses an optimized training setup:
 - 🔄 SGD Optimizer with momentum (0.9)
-- 📈 OneCycleLR Scheduler (max_lr=0.1)
-- 📦 Batch Size: 32
+- 📈 OneCycleLR Scheduler (max_lr=0.2)
+- 📦 Batch Size: 64
 - 🎯 Single Epoch Training
+- 🔧 Weight Decay: 5e-4
+- 📈 Fast warmup (20% of training)
 
 ## 📊 Data Augmentation
 
@@ -55,7 +59,7 @@ Our comprehensive testing ensures model reliability:
 
 | Test | Description |
 |------|-------------|
-| ✓ Parameter Count | Verifies model stays under 15K parameters |
+| ✓ Parameter Count | Verifies model stays under 25K parameters |
 | ✓ Output Shape | Ensures correct tensor dimensions |
 | ✓ Forward Pass | Validates stable forward propagation |
 | ✓ Probability | Checks proper probability distribution |
@@ -81,9 +85,10 @@ with torch.no_grad():
 ## 📈 Performance
 
 - Training Accuracy: > 95% (1 epoch)
-- Parameters: ~14,000
+- Parameters: ~20,000
 - Training Time: < 5 minutes (CPU)
 - Optimized for both CPU and GPU training
+- Stable training with BatchNorm
 
 ## 🛠️ Development
 
