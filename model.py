@@ -8,71 +8,88 @@ class MNISTNet(nn.Module):
         super(MNISTNet, self).__init__()
         # Input Block
         self.convblock1 = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
+            nn.Conv2d(in_channels=1, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Dropout(dropout_value)
-        ) # output_size = 26, RF = 3
+        ) # output_size = 28, RF = 3
 
         # CONVOLUTION BLOCK 1
         self.convblock2 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Dropout(dropout_value)
-        ) # output_size = 24, RF = 5
+        ) # output_size = 28, RF = 5
         self.convblock3 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Dropout(dropout_value)
-        ) # output_size = 22, RF = 7
+        ) # output_size = 28, RF = 7
 
         # TRANSITION BLOCK 1
-        self.pool1 = nn.MaxPool2d(2, 2) # output_size = 11, RF = 8
+        self.pool1 = nn.MaxPool2d(2, 2) # output_size = 14, RF = 8
         self.convblock4 = nn.Sequential(
             nn.Conv2d(in_channels=32, out_channels=16, kernel_size=(1, 1), padding=0, bias=False),
             nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.Dropout(dropout_value)
-        ) # output_size = 11, RF = 8
+        ) # output_size = 14, RF = 8
 
         # CONVOLUTION BLOCK 2
         self.convblock5 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(3, 3), padding=0, bias=False),
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Dropout(dropout_value)
-        ) # output_size = 9, RF = 12
+        ) # output_size = 14, RF = 12
         self.convblock6 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, bias=False),
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.Dropout(dropout_value)
+        ) # output_size = 14, RF = 16
+
+        # TRANSITION BLOCK 2
+        self.pool2 = nn.MaxPool2d(2, 2) # output_size = 7, RF = 18
+        self.convblock7 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(1, 1), padding=0, bias=False),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.Dropout(dropout_value)
+        ) # output_size = 7, RF = 18
+
+        # CONVOLUTION BLOCK 3
+        self.convblock8 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Dropout(dropout_value)
-        ) # output_size = 7, RF = 16
-
-        # OUTPUT BLOCK
-        self.convblock7 = nn.Sequential(
+        ) # output_size = 7, RF = 22
+        
+        self.convblock9 = nn.Sequential(
             nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Dropout(dropout_value)
-        ) # output_size = 7, RF = 20
+        ) # output_size = 7, RF = 26
         
-        self.convblock8 = nn.Sequential(
+        # OUTPUT BLOCK
+        self.convblock10 = nn.Sequential(
             nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3, 3), padding=1, bias=False),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Dropout(dropout_value)
-        ) # output_size = 7, RF = 24
+        ) # output_size = 7, RF = 30
         
-        self.convblock9 = nn.Sequential(
+        self.convblock11 = nn.Sequential(
             nn.Conv2d(in_channels=32, out_channels=10, kernel_size=(1, 1), padding=0, bias=False),
-        ) # output_size = 7, RF = 24
+        ) # output_size = 7, RF = 30
         
         self.gap = nn.Sequential(
             nn.AvgPool2d(kernel_size=7)
-        ) # output_size = 1, RF = 38
+        ) # output_size = 1, RF = 44
 
     def forward(self, x):
         x = self.convblock1(x)
@@ -82,9 +99,12 @@ class MNISTNet(nn.Module):
         x = self.convblock4(x)
         x = self.convblock5(x)
         x = self.convblock6(x)
+        x = self.pool2(x)
         x = self.convblock7(x)
         x = self.convblock8(x)
         x = self.convblock9(x)
+        x = self.convblock10(x)
+        x = self.convblock11(x)
         x = self.gap(x)
         x = x.view(-1, 10)
         return F.log_softmax(x, dim=-1)
