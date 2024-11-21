@@ -60,20 +60,25 @@ Total Parameters: ~24,000
 ## 📊 Training Configuration
 
 Our model uses an optimized training setup:
-- 🔄 SGD Optimizer with momentum (0.9)
-- 📈 OneCycleLR Scheduler (max_lr=0.2)
-- 📦 Batch Size: 64
+- 🔄 SGD Optimizer with Nesterov momentum (0.9)
+- 📈 OneCycleLR Scheduler:
+  - max_lr: 0.15
+  - div_factor: 10.0
+  - final_div_factor: 100.0
+  - pct_start: 0.2
+  - anneal_strategy: 'cos'
+- 📦 Batch Size: 128
 - 🎯 Single Epoch Training
-- 🔧 Weight Decay: 5e-4
-- 📈 Fast warmup (20% of training)
+- 🔧 Weight Decay: 5e-5
+- 📈 Gradient Clipping: 0.1
 - 💧 Dropout: 5%
 
 ## 📊 Data Augmentation
 
 Carefully tuned augmentation for optimal performance:
 
-- 🔄 Random rotation (±5°)
-- ↔️ Random translation (±5%)
+- 🔄 Random rotation (±2°)
+- ↔️ Random translation (±2%)
 - 📊 Normalization (μ=0.1307, σ=0.3081)
 
 ### Augmentation Examples

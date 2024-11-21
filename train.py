@@ -37,8 +37,8 @@ def save_augmented_samples(dataset, num_samples=5):
 
 def get_transforms():
     return transforms.Compose([
-        transforms.RandomRotation(3),
-        transforms.RandomAffine(degrees=0, translate=(0.03, 0.03)),
+        transforms.RandomRotation(2),
+        transforms.RandomAffine(degrees=0, translate=(0.02, 0.02)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
@@ -54,25 +54,26 @@ def train_model():
     # Save augmented samples before training
     save_augmented_samples(dataset)
     
-    # Smaller batch size for better gradient updates
-    train_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=128, shuffle=True)
     
     # Modified optimizer settings
     optimizer = torch.optim.SGD(
         model.parameters(),
-        lr=0.01,
+        lr=0.015,
         momentum=0.9,
         nesterov=True,
-        weight_decay=1e-4
+        weight_decay=5e-5
     )
     
     # Modified learning rate scheduler
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer,
-        max_lr=0.1,
+        max_lr=0.15,
         epochs=1,
         steps_per_epoch=len(train_loader),
-        pct_start=0.3,
+        pct_start=0.2,
+        div_factor=10.0,
+        final_div_factor=100.0,
         anneal_strategy='cos'
     )
     

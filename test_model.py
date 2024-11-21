@@ -11,7 +11,7 @@ def test_model_parameters():
 
 def test_model_output_shape():
     model = MNISTNet()
-    batch_size = 64
+    batch_size = 128
     x = torch.randn(batch_size, 1, 28, 28)
     output = model(x)
     assert output.shape == (batch_size, 10), f"Expected output shape {(batch_size, 10)}, got {output.shape}"
