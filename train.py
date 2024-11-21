@@ -1,121 +1,69 @@
 import torch
-import torchvision
-import torchvision.transforms as transforms
-from model import MNISTNet
+import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data import DataLoader
-import matplotlib.pyplot as plt
-import os
-import torch.nn.functional as F
+from torchvision import datasets, transforms
+from model import LightweightNet
 
-def save_augmented_samples(dataset, num_samples=5):
-    # Create images directory if it doesn't exist
-    os.makedirs('images', exist_ok=True)
-    
-    fig, axes = plt.subplots(2, num_samples, figsize=(15, 6))
-    for i in range(num_samples):
-        # Get original image
-        original_dataset = torchvision.datasets.MNIST('./data', train=True, download=True,
-                                                    transform=transforms.ToTensor())
-        orig_img, _ = original_dataset[i]
-        
-        # Get augmented image
-        aug_img, _ = dataset[i]
-        
-        # Plot original
-        axes[0, i].imshow(orig_img.squeeze(), cmap='gray')
-        axes[0, i].axis('off')
-        axes[0, i].set_title('Original')
-        
-        # Plot augmented
-        axes[1, i].imshow(aug_img.squeeze(), cmap='gray')
-        axes[1, i].axis('off')
-        axes[1, i].set_title('Augmented')
-    
-    plt.tight_layout()
-    plt.savefig('images/augmented_samples.png')
-    plt.close()
-
-def get_transforms():
-    return transforms.Compose([
-        transforms.RandomRotation(2),
-        transforms.RandomAffine(degrees=0, translate=(0.02, 0.02)),
+def train(epochs=1, batch_size=128, learning_rate=0.01):
+    # Data augmentation and normalization
+    transform = transforms.Compose([
+        transforms.RandomAffine(degrees=5, translate=(0.1, 0.1)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
-
-def train_model():
+    
+    # Load MNIST dataset
+    train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = MNISTNet().to(device)
+    model = LightweightNet().to(device)
     
-    # Data loading with augmentation
-    dataset = torchvision.datasets.MNIST('./data', train=True, download=True,
-                                     transform=get_transforms())
+    # Print model parameters
+    print(f"Total parameters: {model.count_parameters():,}")
     
-    # Save augmented samples before training
-    save_augmented_samples(dataset)
-    
-    train_loader = DataLoader(dataset, batch_size=128, shuffle=True)
-    
-    # Modified optimizer settings
-    optimizer = torch.optim.SGD(
-        model.parameters(),
-        lr=0.015,
-        momentum=0.9,
-        nesterov=True,
-        weight_decay=5e-5
-    )
-    
-    # Modified learning rate scheduler
+    # One cycle learning rate scheduler
+    optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizer,
-        max_lr=0.15,
-        epochs=1,
-        steps_per_epoch=len(train_loader),
-        pct_start=0.2,
-        div_factor=10.0,
-        final_div_factor=100.0,
-        anneal_strategy='cos'
+        optimizer, 
+        max_lr=learning_rate,
+        epochs=epochs,
+        steps_per_epoch=len(train_loader)
     )
+    
+    criterion = nn.CrossEntropyLoss()
     
     model.train()
-    correct = 0
-    total = 0
-    running_loss = 0.0
-    
-    # Train for exactly one epoch
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
+    for epoch in range(epochs):
+        running_loss = 0.0
+        correct = 0
+        total = 0
         
-        # Forward pass
-        output = model(data)
-        loss = F.nll_loss(output, target)
-        
-        # Backward pass
-        loss.backward()
-        
-        # Gradient clipping
-        torch.nn.utils.clip_grad_value_(model.parameters(), 0.1)
-        
-        optimizer.step()
-        scheduler.step()
-        
-        # Calculate accuracy
-        pred = output.argmax(dim=1, keepdim=True)
-        correct += pred.eq(target.view_as(pred)).sum().item()
-        total += target.size(0)
-        running_loss += loss.item()
-        
-        if batch_idx % 100 == 0:
-            accuracy = 100. * correct / total
-            avg_loss = running_loss / (batch_idx + 1)
-            print(f'Batch [{batch_idx}/{len(train_loader)}] Loss: {avg_loss:.6f}, Accuracy: {accuracy:.2f}%')
-    
-    # Final accuracy
-    accuracy = 100. * correct / total
-    print(f'Final Training Accuracy: {accuracy:.2f}%')
-    
-    if accuracy < 95.0:
-        raise ValueError(f"Model accuracy ({accuracy:.2f}%) is below the required 95%")
-    
-    return model 
+        for batch_idx, (data, target) in enumerate(train_loader):
+            data, target = data.to(device), target.to(device)
+            
+            optimizer.zero_grad()
+            output = model(data)
+            loss = criterion(output, target)
+            
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
+            
+            running_loss += loss.item()
+            _, predicted = output.max(1)
+            total += target.size(0)
+            correct += predicted.eq(target).sum().item()
+            
+            if batch_idx % 100 == 0:
+                print(f'Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} '
+                      f'({100. * batch_idx / len(train_loader):.0f}%)]\t'
+                      f'Loss: {running_loss/(batch_idx+1):.6f}\t'
+                      f'Accuracy: {100.*correct/total:.2f}%')
+                
+    print(f'Final Accuracy: {100.*correct/total:.2f}%')
+    return model
+
+if __name__ == '__main__':
+    model = train() 

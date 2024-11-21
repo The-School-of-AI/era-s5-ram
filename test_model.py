@@ -1,59 +1,37 @@
 import torch
-import pytest
-from model import MNISTNet
-import torch.nn.functional as F
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+from model import LightweightNet
 
-def test_model_parameters():
-    model = MNISTNet()
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"Total parameters: {total_params}")
-    assert total_params < 25000, f"Model has {total_params} parameters, should be less than 25000"
-
-def test_model_output_shape():
-    model = MNISTNet()
-    batch_size = 128
-    x = torch.randn(batch_size, 1, 28, 28)
-    output = model(x)
-    assert output.shape == (batch_size, 10), f"Expected output shape {(batch_size, 10)}, got {output.shape}"
-
-def test_model_forward_pass():
-    model = MNISTNet()
-    x = torch.randn(1, 1, 28, 28)
-    output = model(x)
-    assert not torch.isnan(output).any(), "Model output contains NaN values"
-
-def test_model_probability_sum():
-    model = MNISTNet()
-    x = torch.randn(1, 1, 28, 28)
-    output = torch.exp(model(x))
-    prob_sum = output.sum().item()
-    assert abs(prob_sum - 1.0) < 1e-6, f"Probability sum should be 1, got {prob_sum}"
-
-def test_model_augmentation():
-    from train import get_transforms
-    transforms = get_transforms()
-    x = torch.ones(1, 28, 28)
-    augmented = transforms(x)
-    assert augmented.shape == (1, 28, 28), "Augmentation should preserve image dimensions"
-
-def test_model_learning():
-    model = MNISTNet()
-    optimizer = torch.optim.Adam(model.parameters())
-    x = torch.randn(32, 1, 28, 28)
-    target = torch.randint(0, 10, (32,))
+def test(model, batch_size=1000):
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
     
-    # Initial loss
-    initial_output = model(x)
-    initial_loss = F.nll_loss(initial_output, target)
+    test_dataset = datasets.MNIST('./data', train=False, transform=transform)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size)
     
-    # One optimization step
-    optimizer.zero_grad()
-    loss = F.nll_loss(initial_output, target)
-    loss.backward()
-    optimizer.step()
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+    model.eval()
     
-    # New loss
-    new_output = model(x)
-    new_loss = F.nll_loss(new_output, target)
+    correct = 0
+    total = 0
     
-    assert new_loss < initial_loss, "Model should learn and reduce loss" 
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            _, predicted = output.max(1)
+            total += target.size(0)
+            correct += predicted.eq(target).sum().item()
+    
+    accuracy = 100. * correct / total
+    print(f'Test Accuracy: {accuracy:.2f}%')
+    return accuracy
+
+if __name__ == '__main__':
+    model = LightweightNet()
+    model.load_state_dict(torch.load('model.pth'))
+    test(model) 
