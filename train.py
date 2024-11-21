@@ -5,6 +5,7 @@ from model import MNISTNet
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
+import torch.nn.functional as F
 
 def save_augmented_samples(dataset, num_samples=5):
     # Create images directory if it doesn't exist
