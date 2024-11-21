@@ -25,11 +25,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest torch torchvision matplotlib numpy
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        pip install pytest matplotlib numpy
     
     - name: Train model and verify accuracy
       run: |
+        export CUDA_VISIBLE_DEVICES=""
         python -c "from train import train_model; train_model()"
       continue-on-error: false
     
