@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from model import LightweightNet
 
-def train(epochs=1, batch_size=128, learning_rate=0.01):
+def train_model(epochs=1, batch_size=128, learning_rate=0.01):
     # Data augmentation and normalization
     transform = transforms.Compose([
         transforms.RandomAffine(degrees=5, translate=(0.1, 0.1)),
@@ -66,4 +66,4 @@ def train(epochs=1, batch_size=128, learning_rate=0.01):
     return model
 
 if __name__ == '__main__':
-    model = train() 
+    model = train_model() 
