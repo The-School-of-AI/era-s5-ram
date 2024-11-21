@@ -37,8 +37,8 @@ def save_augmented_samples(dataset, num_samples=5):
 
 def get_transforms():
     return transforms.Compose([
-        transforms.RandomRotation(10),
-        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
+        transforms.RandomRotation(5),
+        transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
@@ -54,9 +54,12 @@ def train_model():
     # Save augmented samples before training
     save_augmented_samples(dataset)
     
-    train_loader = DataLoader(dataset, batch_size=128, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=32, shuffle=True)
     
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.1, 
+                                                  epochs=1, 
+                                                  steps_per_epoch=len(train_loader))
     
     model.train()
     correct = 0
@@ -70,6 +73,7 @@ def train_model():
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
+        scheduler.step()
         
         # Calculate accuracy
         pred = output.argmax(dim=1, keepdim=True)
@@ -78,7 +82,7 @@ def train_model():
         
         if batch_idx % 100 == 0:
             accuracy = 100. * correct / total
-            print(f'Loss: {loss.item():.6f}, Accuracy: {accuracy:.2f}%')
+            print(f'Batch [{batch_idx}/{len(train_loader)}] Loss: {loss.item():.6f}, Accuracy: {accuracy:.2f}%')
     
     # Final accuracy
     accuracy = 100. * correct / total

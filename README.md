@@ -17,14 +17,31 @@ A highly efficient MNIST classifier that achieves remarkable performance with mi
 
 ## 🏗️ Model Architecture
 
+```python
+MNISTNet(
+  (conv1): Conv2d(1, 8, kernel_size=3, padding=1)    # 28x28x8
+  (conv2): Conv2d(8, 16, kernel_size=3, padding=1)   # 28x28x16
+  (conv3): Conv2d(16, 10, kernel_size=3, padding=1)  # 28x28x10
+  (gap): AdaptiveAvgPool2d(1)                        # Global Average Pooling
+)
+```
+
 Total Parameters: ~14,000
+
+## 📊 Training Configuration
+
+Our model uses an optimized training setup:
+- 🔄 SGD Optimizer with momentum (0.9)
+- 📈 OneCycleLR Scheduler (max_lr=0.1)
+- 📦 Batch Size: 32
+- 🎯 Single Epoch Training
 
 ## 📊 Data Augmentation
 
-Our model employs robust data augmentation techniques to enhance training:
+Carefully tuned augmentation for optimal performance:
 
-- 🔄 Random rotation (±10°)
-- ↔️ Random translation (±10%)
+- 🔄 Random rotation (±5°)
+- ↔️ Random translation (±5%)
 - 📊 Normalization (μ=0.1307, σ=0.3081)
 
 ### Augmentation Examples
@@ -66,6 +83,7 @@ with torch.no_grad():
 - Training Accuracy: > 95% (1 epoch)
 - Parameters: ~14,000
 - Training Time: < 5 minutes (CPU)
+- Optimized for both CPU and GPU training
 
 ## 🛠️ Development
 
@@ -79,8 +97,6 @@ pip install -r requirements.txt
 # Run tests
 pytest test_model.py -v
 ```
-
-
 
 ## 🤝 Contributing
 
