@@ -3,12 +3,13 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from model import LightweightNet
+from model import MiniResNet
 
 def train_model(epochs=1, batch_size=128, learning_rate=0.01):
     # Data augmentation and normalization
     transform = transforms.Compose([
         transforms.RandomAffine(degrees=5, translate=(0.1, 0.1)),
+        transforms.RandomRotation(5),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
@@ -18,18 +19,19 @@ def train_model(epochs=1, batch_size=128, learning_rate=0.01):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = LightweightNet().to(device)
+    model = MiniResNet().to(device)
     
     # Print model parameters
     print(f"Total parameters: {model.count_parameters():,}")
     
-    # One cycle learning rate scheduler
-    optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
+    # Cosine annealing scheduler for better convergence
+    optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizer, 
+        optimizer,
         max_lr=learning_rate,
         epochs=epochs,
-        steps_per_epoch=len(train_loader)
+        steps_per_epoch=len(train_loader),
+        pct_start=0.2,
     )
     
     criterion = nn.CrossEntropyLoss()

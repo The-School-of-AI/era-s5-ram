@@ -1,7 +1,7 @@
 import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
-from model import LightweightNet
+from model import MiniResNet
 
 def test(model, batch_size=1000):
     transform = transforms.Compose([
@@ -32,6 +32,6 @@ def test(model, batch_size=1000):
     return accuracy
 
 if __name__ == '__main__':
-    model = LightweightNet()
+    model = MiniResNet()
     model.load_state_dict(torch.load('model.pth'))
     test(model) 
