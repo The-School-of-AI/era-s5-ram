@@ -9,7 +9,7 @@ An efficient MNIST classifier that achieves remarkable performance with minimal 
 
 ## 🌟 Key Features
 
-- **Lightweight Architecture**: < 15,000 parameters
+- **Efficient Architecture**: < 25,000 parameters
 - **Fast Training**: 95%+ accuracy in just 1 epoch
 - **Modern Design**: Uses GAP and extensive BatchNorm
 - **Robust**: Includes dropout and data augmentation
@@ -20,33 +20,34 @@ An efficient MNIST classifier that achieves remarkable performance with minimal 
 ```python
 MNISTNet(
   # Input Block
-  (convblock1): Sequential(Conv2d(1, 8, k=3), BN, ReLU, Dropout)  # 26x26x8, RF=3
+  (convblock1): Sequential(Conv2d(1, 16, k=3), BN, ReLU, Dropout)  # 26x26x16, RF=3
   
   # Convolution Block 1
-  (convblock2): Sequential(Conv2d(8, 8, k=3), BN, ReLU, Dropout)  # 24x24x8, RF=5
-  (convblock3): Sequential(Conv2d(8, 16, k=3), BN, ReLU, Dropout) # 22x22x16, RF=7
+  (convblock2): Sequential(Conv2d(16, 16, k=3), BN, ReLU, Dropout)  # 24x24x16, RF=5
+  (convblock3): Sequential(Conv2d(16, 32, k=3), BN, ReLU, Dropout)  # 22x22x32, RF=7
   
   # Transition Block 1
-  (pool1): MaxPool2d(2, 2)                                        # 11x11x16, RF=8
-  (convblock4): Sequential(Conv2d(16, 8, k=1), BN, ReLU, Dropout) # 11x11x8, RF=8
+  (pool1): MaxPool2d(2, 2)                                          # 11x11x32, RF=8
+  (convblock4): Sequential(Conv2d(32, 16, k=1), BN, ReLU, Dropout) # 11x11x16, RF=8
   
   # Convolution Block 2
-  (convblock5): Sequential(Conv2d(8, 16, k=3), BN, ReLU, Dropout)  # 9x9x16, RF=12
-  (convblock6): Sequential(Conv2d(16, 16, k=3), BN, ReLU, Dropout) # 7x7x16, RF=16
+  (convblock5): Sequential(Conv2d(16, 32, k=3), BN, ReLU, Dropout)  # 9x9x32, RF=12
+  (convblock6): Sequential(Conv2d(32, 32, k=3), BN, ReLU, Dropout)  # 7x7x32, RF=16
   
   # Output Block
-  (convblock7): Sequential(Conv2d(16, 32, k=3, p=1), BN, ReLU, Dropout) # 7x7x32, RF=20
-  (convblock8): Conv2d(32, 10, k=1)                                      # 7x7x10, RF=20
-  (gap): AvgPool2d(7)                                                    # 1x1x10, RF=32
+  (convblock7): Sequential(Conv2d(32, 64, k=3, p=1), BN, ReLU, Dropout) # 7x7x64, RF=20
+  (convblock8): Sequential(Conv2d(64, 32, k=3, p=1), BN, ReLU, Dropout) # 7x7x32, RF=24
+  (convblock9): Conv2d(32, 10, k=1)                                      # 7x7x10, RF=24
+  (gap): AvgPool2d(7)                                                    # 1x1x10, RF=38
 )
 ```
 
-Total Parameters: ~13,000
+Total Parameters: ~23,000
 
 ## 🔍 Architecture Highlights
 
-1. **Progressive Channel Growth**: 1 → 8 → 16 → 32 → 10 channels
-2. **Receptive Field**: Carefully designed to reach RF=32
+1. **Progressive Channel Growth**: 1 → 16 → 32 → 16 → 32 → 64 → 32 → 10 channels
+2. **Receptive Field**: Carefully designed to reach RF=38
 3. **Regularization**: 
    - BatchNorm after every conv layer
    - 5% dropout throughout

@@ -37,8 +37,8 @@ def save_augmented_samples(dataset, num_samples=5):
 
 def get_transforms():
     return transforms.Compose([
-        transforms.RandomRotation(5),
-        transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
+        transforms.RandomRotation(3),
+        transforms.RandomAffine(degrees=0, translate=(0.03, 0.03)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
@@ -54,13 +54,27 @@ def train_model():
     # Save augmented samples before training
     save_augmented_samples(dataset)
     
-    train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
+    # Smaller batch size for better gradient updates
+    train_loader = DataLoader(dataset, batch_size=32, shuffle=True)
     
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.2, 
-                                                  epochs=1, 
-                                                  steps_per_epoch=len(train_loader),
-                                                  pct_start=0.2)
+    # Modified optimizer settings
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        lr=0.01,
+        momentum=0.9,
+        nesterov=True,
+        weight_decay=1e-4
+    )
+    
+    # Modified learning rate scheduler
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizer,
+        max_lr=0.1,
+        epochs=1,
+        steps_per_epoch=len(train_loader),
+        pct_start=0.3,
+        anneal_strategy='cos'
+    )
     
     model.train()
     correct = 0
@@ -71,9 +85,17 @@ def train_model():
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
+        
+        # Forward pass
         output = model(data)
         loss = F.nll_loss(output, target)
+        
+        # Backward pass
         loss.backward()
+        
+        # Gradient clipping
+        torch.nn.utils.clip_grad_value_(model.parameters(), 0.1)
+        
         optimizer.step()
         scheduler.step()
         
